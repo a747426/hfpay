@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>后台登录</title>
+	<meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+	<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body class="login-bg">
+    
+    <div class="login layui-anim layui-anim-up">
+        <div class="message">管理后台登录，购买程序添加QQ：1065522490</div>
+        <div id="darkbannerwrap"></div>
+        
+        <form method="post" class="layui-form" >
+            <input name="account" placeholder="用户名"  type="text" lay-verify="required" class="layui-input" >
+            <hr class="hr15">
+            <input name="password" lay-verify="required" placeholder="密码"  type="password" class="layui-input">
+            <hr class="hr15">
+            <input value="登录" lay-submit lay-filter="login" style="width:100%;" type="submit">
+            <hr class="hr20" >
+        </form>
+    </div>
+
+    <script>
+        $(function() {
+            layui.use('form', function(){
+              var form = layui.form;
+              //监听提交
+              form.on('submit(login)', function(data){
+            	  $.post('[[@{/user/login.html}]]',data.field,function(result)
+            		{
+            		  if(result.code==0)
+            			{
+            			  location.href='index.html'
+            			}
+            		  else
+            			{
+            			  layer.msg(result.msg,function(){
+                              
+                          });
+            			}
+            		})
+                return false;
+              });
+            });
+        })
+    </script>
+</body>
+</html>

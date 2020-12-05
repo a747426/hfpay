@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>号码列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- load css -->
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+	<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body class="layui-anim layui-anim-fadein">
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a>号码管理</a>
+        <a><cite>号码列表</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <div class="layui-row">
+        <div class="layui-form layui-col-md12 x-so">
+           <div class="layui-input-inline">
+            <select id="group_id" name="group_id">
+              <option value="">选择分组</option>
+              <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.name}"></option>
+            </select>
+          </div>
+          <input id="id" type="text" name="id"   placeholder="ID" autocomplete="off" class="layui-input">
+          <input id="com" type="text" name="com"   placeholder="卡池端口号" autocomplete="off" class="layui-input">
+          <input id="card_no" type="text" name="card_no"  placeholder="手机号" autocomplete="off" class="layui-input">
+          <div class="layui-input-inline">
+            <select id="status" name="status">
+              <option value="">全部状态</option>
+              <option value="1">正常</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select id="card_status" name="card_status">
+              <option value="">App在线状态</option>
+              <option value="-1">登录中</option>
+              <option value="0">离线</option>
+              <option value="1">在线</option>
+              <option value="2">异常</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select id="web_login_status" name="web_login_status">
+              <option value="">Web在线状态</option>
+              <option value="-1">登录中</option>
+              <option value="0">离线</option>
+              <option value="1">在线</option>
+              <option value="2">异常</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select id="app_place_order_flag" name="app_place_order_flag">
+              <option value="">App限额状态</option>
+              <option value="0">限额</option>
+              <option value="1">正常</option>
+              <option value="2">黑名单</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select id="web_place_order_flag" name="web_place_order_flag">
+              <option value="">Web限额状态</option>
+              <option value="0">限额</option>
+              <option value="1">正常</option>
+              <option value="2">黑名单</option>
+            </select>
+          </div>
+          
+          <button id="searchBtn" data-type="reload" class="layui-btn"  lay-submit="" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
+          <button class="layui-btn" style="margin-left: 30px;" onclick="downLoadMoban()">下载模板</button>
+        </div>
+      </div>
+      <xblock>
+      <button class="layui-btn" onclick="x_admin_show('新增手机号','/card/addPage.html',465,550)"><i class="layui-icon"></i>新增</button>
+ 		 <button id="importData" class="layui-btn">批量导入</button>
+ 		 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="layui-btn" onclick="x_admin_show('一键重新登录','/card/allReLoginPage.html',465,250)">一键重新登录</button>
+      </xblock>
+      <table class="layui-hide" id="table1" lay-filter="tool1"></table>
+      <script type="text/html" id="bar1">
+		<a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="queryOrder">查单</a>
+		{{#  if(d.status == 1){ }}
+ 		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">禁用</a>
+		{{#  }else{  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="del">启用</a>
+		{{#  }  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="update" onclick="x_admin_show('修改信息','/card/updatePage.html?id={{d.id}}',465,580)">修改</a>
+		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="remove">删除</a>
+		<a class="layui-btn layui-btn layui-btn-xs" lay-event="reLogin">App端重新登录</a>
+		<a class="layui-btn layui-btn layui-btn-xs" lay-event="reLoginWeb">Web端重新登录</a>
+		</script>
+      </div>
+<script type="text/html" id="statusTpl">
+{{#  if(d.status == 1){ }}
+<span style="color: green;">正常</span>
+{{#  }else{  }}
+<span style="color: red;">禁用</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="cardStatusTpl">
+{{#  if(d.card_status == 1&&d.web_login_status==1){ }}
+<span style="color: green;">在线</span>/<span style="color: green;">在线</span>
+{{#  }else if(d.card_status == 0&&d.web_login_status==0){  }}
+<span>离线</span>/<span>离线</span>
+{{#  }else if(d.card_status == 2&&d.web_login_status==2){  }}
+<span style="color: red;">异常</span>/<span style="color: red;">异常</span>
+{{#  }else if(d.card_status == 0&&d.web_login_status==1){  }}
+<span>离线</span>/<span style="color: green;">在线</span>
+{{#  }else if(d.card_status == 2&&d.web_login_status==1){  }}
+<span style="color: red;">异常</span>/<span style="color: green;">在线</span>
+{{#  }else if(d.card_status == 2&&d.web_login_status==0){  }}
+<span style="color: red;">异常</span>/<span>离线</span>
+{{#  }else if(d.card_status == 1&&d.web_login_status==0){  }}
+<span style="color: green;">在线</span>/<span>离线</span>
+{{#  }else if(d.card_status == 0&&d.web_login_status==2){  }}
+<span>离线</span>/<span style="color: red;">异常</span>
+{{#  }else if(d.card_status == 1&&d.web_login_status==2){  }}
+<span style="color: green;">在线</span>/<span style="color: red;">异常</span>
+{{#  }else if(d.card_status == -1&&d.web_login_status==-1){  }}
+<span style="color: blue;">登陆中</span>/<span style="color: blue;">登陆中</span>
+{{#  }else if(d.card_status == 1&&d.web_login_status==-1){  }}
+<span style="color: green;">在线</span>/<span style="color: blue;">登陆中</span>
+{{#  }else if(d.card_status == 0&&d.web_login_status==-1){  }}
+<span>离线</span>/<span style="color: blue;">登陆中</span>
+{{#  }else if(d.card_status == 2&&d.web_login_status==-1){  }}
+<span style="color: red;">异常</span>/<span style="color: blue;">登陆中</span>
+{{#  }else if(d.card_status == -1&&d.web_login_status==1){  }}
+<span style="color: blue;">登陆中</span>/<span style="color: green;">在线</span>
+{{#  }else if(d.card_status == -1&&d.web_login_status==0){  }}
+<span style="color: blue;">登陆中</span>/<span>离线</span>
+{{#  }else if(d.card_status == -1&&d.web_login_status==2){  }}
+<span style="color: blue;">登陆中</span>/<span style="color: red;">异常</span>
+{{#  }else if(d.card_status == 1&&d.web_login_status==3){  }}
+<span style="color: green;">在线</span>/<span style="color: red;">日限制</span>
+{{#  }else if(d.card_status == 0&&d.web_login_status==3){  }}
+<span>离线</span>/<span style="color: red;">日限制</span>
+{{#  }else if(d.card_status == 2&&d.web_login_status==3){  }}
+<span style="color: red;">异常</span>/<span style="color: red;">日限制</span>
+{{#  }else if(d.card_status == -1&&d.web_login_status==3){  }}
+<span style="color: blue;">登陆中</span>/<span style="color: red;">日限制</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="cardStatusWebTpl">
+{{#  if(d.web_login_status == 1){ }}
+<span style="color: green;">在线</span>
+{{#  }else if(d.web_login_status == 0){  }}
+<span>离线</span>
+{{#  }else if(d.web_login_status == -1){  }}
+<span style="color: blue;">登陆中</span>
+{{#  }else if(d.web_login_status == 2){  }}
+<span style="color: red;">异常</span>
+{{#  }else if(d.web_login_status == 3){  }}
+<span style="color: red;">日限制</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="placeOrderFlagTpl">
+{{#  if(d.app_place_order_flag == 1&&d.web_place_order_flag==1){ }}
+<span style="color: green;">正常</span>/<span style="color: green;">正常</span>
+{{#  }else if(d.app_place_order_flag == 0&&d.web_place_order_flag==1){  }}
+<span style="color: red;">限额</span>/<span style="color: green;">正常</span>
+{{#  }else if(d.app_place_order_flag == 1&&d.web_place_order_flag==0){  }}
+<span style="color: green;">正常</span>/<span style="color: red;">限额</span>
+{{#  }else if(d.app_place_order_flag == 0&&d.web_place_order_flag==0){  }}
+<span style="color: red;">限额</span>/<span style="color: red;">限额</span>
+{{#  }else if(d.app_place_order_flag == 2&&d.web_place_order_flag==2){  }}
+<span style="color: red;">黑名单</span>/<span style="color: red;">黑名单</span>
+{{#  }else if(d.app_place_order_flag == 2&&d.web_place_order_flag==1){  }}
+<span style="color: red;">黑名单</span>/<span style="color: green;">正常</span>
+{{#  }else if(d.app_place_order_flag == 2&&d.web_place_order_flag==0){  }}
+<span style="color: red;">黑名单</span>/<span style="color: red;">限额</span>
+{{#  }else if(d.app_place_order_flag == 1&&d.web_place_order_flag==2){  }}
+<span style="color: green;">正常</span>/<span style="color: red;">黑名单</span>
+{{#  }else if(d.app_place_order_flag == 0&&d.web_place_order_flag==2){  }}
+<span style="color: red;">限额</span>/<span style="color: red;">黑名单</span>
+{{#  }  }}
+</script>
+<script>
+	 function downLoadMoban()
+	 {
+		 window.open('[[@{/doc/moban.xls}]]'); 
+	 }
+      layui.use(['laydate', 'laypage', 'table', "upload"], function(){
+        var laydate = layui.laydate,
+        table = layui.table, //表格
+        laypage = layui.laypage, //分页
+        upload = layui.upload;//主要是这个
+        //执行一个 table 实例
+        table.render({
+          elem: '#table1'
+          ,height: 650
+          ,limit: 14
+          ,limits:[14,20,30,40,50,60,70,80,90]
+          ,url: '[[@{/card/list.html}]]' //数据接口
+          ,id:'table1'
+          ,page: true
+          ,cols: [
+           [
+            {field: 'id', title: 'ID', width:'5%', sort: true, align:'center',fixed: 'left'}
+            ,{field: 'group_name', title: '所属分组', width: '8%', align:'center'}
+            ,{field: 'com', title: '卡池端口号', width: '7%', align:'center'}
+            ,{field: 'card_no', title: '手机号', width: '8%', align:'center'}
+            ,{field: 'all_income', title: '总交易额', width: '7%', align:'center'}
+            ,{field: 'today_income', title: '今日交易额', width: '7%', align:'center'}
+            ,{field: 'buy_card_count', title: '今日购卡数', width: '7%', align:'center'}
+            ,{field: 'place_order_flag', title: '限额(app/web)', width: '8%',templet:'#placeOrderFlagTpl', align:'center'}
+            ,{field: 'card_status', title: '登录(app/web)', width: '8%',templet:'#cardStatusTpl', align:'center'}
+            ,{field: 'status', title: '状态', width: '6%',templet:'#statusTpl', align:'center'}
+           /*  ,{field: 'remarks', title: '备注',width: '11%', align:'center'} */
+            ,{fixed: 'right', title: '操作',align:'center', toolbar: '#bar1', width:'28%'}
+          ]
+          ]
+        });
+        $('#searchBtn').on('click', function(){
+        	var index = layer.msg('查询中，请稍候...',{icon: 16,time:false,shade:0});
+        	table.reload('table1', {
+    	        page: {
+    	          curr: 1 //重新从第 1 页开始
+    	        }
+    	        ,where: {
+    	        	'id': $('#id').val(),
+    	        	'com': $('#com').val(),
+    	            'card_no':$('#card_no').val(),
+    	            'group_id':$('#group_id').val(),
+    	            'status': $('#status').val(),
+    	            'card_status': $('#card_status').val(),
+    	            'web_login_status': $('#web_login_status').val(),
+    	            'app_place_order_flag': $('#app_place_order_flag').val(),
+    	            'web_place_order_flag': $('#web_place_order_flag').val()
+    	        }
+    	      });
+        	layer.close(index);
+       });
+        
+      //监听工具条
+        table.on('tool(tool1)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+          var data = obj.data //获得当前行数据
+          ,layEvent = obj.event; //获得 lay-event 对应的值
+          if(layEvent === 'reLogin'){
+        	  layer.confirm('确认重新登录？', function(index){
+                  $.post('[[@{/card/updateCardStatus.html}]]',{'id':data.id},function(data){
+                	  layer.close(index);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'id': $('#id').val(),
+                	        	'com': $('#com').val(),
+                	            'card_no':$('#card_no').val(),
+                	            'group_id':$('#group_id').val(),
+                	            'status': $('#status').val(),
+                	            'card_status': $('#card_status').val(),
+                	            'web_login_status': $('#web_login_status').val(),
+                	            'app_place_order_flag': $('#app_place_order_flag').val(),
+                	            'web_place_order_flag': $('#web_place_order_flag').val()
+                  	        }
+                  	      });
+                	  }
+                	  else
+                	  {
+                		  layer.msg('修改失败');
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'reLoginWeb'){
+        	  layer.confirm('确认重新登录？', function(index){
+                  $.post('[[@{/card/updateCardStatusWeb.html}]]',{'id':data.id},function(data){
+                	  layer.close(index);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'id': $('#id').val(),
+                	        	'com': $('#com').val(),
+                	            'card_no':$('#card_no').val(),
+                	            'group_id':$('#group_id').val(),
+                	            'status': $('#status').val(),
+                	            'card_status': $('#card_status').val(),
+                	            'web_login_status': $('#web_login_status').val(),
+                	            'app_place_order_flag': $('#app_place_order_flag').val(),
+                	            'web_place_order_flag': $('#web_place_order_flag').val()
+                  	        }
+                  	      });
+                	  }
+                	  else
+                	  {
+                		  layer.msg('修改失败');
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'del'){
+        	  layer.confirm('确认操作？', function(index){
+                  $.post('[[@{/card/updateStatus.html}]]',{'id':data.id,'status':data.status},function(data){
+                	  layer.close(index);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'id': $('#id').val(),
+                	        	'com': $('#com').val(),
+                	            'card_no':$('#card_no').val(),
+                	            'group_id':$('#group_id').val(),
+                	            'status': $('#status').val(),
+                	            'card_status': $('#card_status').val(),
+                	            'web_login_status': $('#web_login_status').val(),
+                	            'app_place_order_flag': $('#app_place_order_flag').val(),
+                	            'web_place_order_flag': $('#web_place_order_flag').val()
+                  	        }
+                  	      });
+                	  }
+                	  else
+                	  {
+                		  layer.msg('修改失败');
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'remove'){
+        	  layer.confirm('请先确认卡密是否获取完毕？确认删除?', function(index){
+                  $.post('[[@{/card/remove.html}]]',{'id':data.id},function(data){
+                	  layer.close(index);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'id': $('#id').val(),
+                	        	'com': $('#com').val(),
+                	            'card_no':$('#card_no').val(),
+                	            'group_id':$('#group_id').val(),
+                	            'status': $('#status').val(),
+                	            'card_status': $('#card_status').val(),
+                	            'web_login_status': $('#web_login_status').val(),
+                	            'app_place_order_flag': $('#app_place_order_flag').val(),
+                	            'web_place_order_flag': $('#web_place_order_flag').val()
+                  	        }
+                  	      });
+                	  }
+                	  else
+                	  {
+                		  layer.msg('删除失败');
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'queryOrder'){
+        	  x_admin_show('查单','/card/onlineOrderListPage.html?cardId='+data.id,1300,650)
+          }
+        });
+      
+        upload.render({
+            elem: "#importData",//导入id
+            url: "[[@{/card/importData.html}]]",
+            accept: "file",
+            exts: 'xls|xlsx|xlsm|xlt|xltx|xltm',
+            done: function (data) {
+          	  layer.msg(data.msg);
+          	table.reload('table1', {
+      	        page: {
+      	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+      	        }
+      	        ,where: {
+      	        	'id': $('#id').val(),
+    	        	'com': $('#com').val(),
+    	            'card_no':$('#card_no').val(),
+    	            'group_id':$('#group_id').val(),
+    	            'status': $('#status').val(),
+    	            'card_status': $('#card_status').val(),
+    	            'web_login_status': $('#web_login_status').val(),
+    	            'app_place_order_flag': $('#app_place_order_flag').val(),
+    	            'web_place_order_flag': $('#web_place_order_flag').val()
+      	        }
+      	      });
+            }
+        });
+      });
+    </script>
+  </body>
+</html>

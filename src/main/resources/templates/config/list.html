@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>系统配置</title>
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport"
+	content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<!-- load css -->
+<link rel="stylesheet" th:href="@{/css/font.css}" />
+<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+<script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+<script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<style type="text/css">
+	#updateBtn{
+		height:38px;
+		border:0px;
+		background:#00BFFF;
+		color:#fff;
+		padding:5px 16px;
+		cursor: pointer;
+	}
+</style>
+<body>
+<!-- <div class="form-body" style="border: solid 1px; margin-top: 5%;line-height: 20px;" align="center"> -->
+<div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a>系统设置</a>
+        <a><cite>配置项</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+         <div class="layui-form layui-form-pane">
+                <div class="layui-form-item layui-form-text">
+                    <div class="layui-form-label" style="height:50px;padding-top: 0.7%;"><h3></h3></div>
+                   <table  class="layui-table layui-input-block" th:each="c : ${configs}">
+                        <tbody>
+                            <tr>
+                                <td style="padding-left: 35px;"  width="20%" th:text="${c.name}"></td>
+                                <td>
+                   				<form method="post" class="layui-form">
+                                    <div class="layui-input-block" id="input-box">
+                                      <input type="hidden" name="id" th:value="${c.id}" />
+                                      <input type="text" style="width: 44.4%;float: left;" name="value" th:value="${c.value}" required="" lay-verify="required" autocomplete="off" class="layui-input"/>
+					                  <span class="input-group-btn" style="margin-left: 20px;">
+					                  	<input type="button" onclick="update(this);" value="修改" class="btn btn-success layui-bg-green" id="updateBtn" name="updateBtn" lay-filter="updateBtn"/>
+									  </span>
+                                    </div>
+                    			</form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+      </div>
+   </div>
+<script>
+function update(obj)
+{
+	layer.confirm('确认修改？', function(index){
+	var form=$(obj).parents("form");
+	var data = {};
+	var t = form.serializeArray();
+    $.each(t, function() {
+    	data[this.name] = this.value;
+    });
+	 $.post('[[@{/config/update.html}]]',data,function(result)
+    		{
+    		  if(result.code==0)
+    			{
+    			  layer.msg(result.msg,function(){
+  					location.reload();
+                    });
+    			}
+    		  else
+    			{
+    			  layer.msg(result.msg,function(){
+                  });
+    			}
+    }) 
+	})
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+server:
+  port : 8001
+
+logging.level :
+  com.jiongzai.pay.dao : info
+
+spring:
+  profiles:
+    active: pro
+  jmx:
+    enabled: false
+  thymeleaf:
+    cache : false
+    prefix : classpath:/templates/
+    suffix : .html
+    mode : HTML5
+    encoding : UTF-8
+    servlet:
+      content-type:  text/html
+  http:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+  session:
+    timeout:
+      seconds: 1800
+
+mybatis:
+  ##给实体类起别名
+  type-aliases-package: com.jiongzai.pay.model
+  ##引入mapper映射文件
+  mapper-locations: classpath:mapper/*.xml
+aes:
+  key: EGaRe8rY5ewaxXsK

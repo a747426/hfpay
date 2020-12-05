@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiongzai.pay.dao.ConfigDao">
+   <sql id="find">
+         <if test="id!=null">and id = #{id}</if>
+         <if test="name!=null">and `name` = #{name}</if>
+         <if test="key!=null">and `key` = #{key}</if>
+         <if test="value!=null">and `value` = #{value}</if>
+    </sql>
+    
+    <select id="getById" resultType="ConfigBean" parameterType="Long">
+        select * from config where id=#{id} 
+    </select>
+    <select id="getValueByKey" resultType="String" parameterType="String">
+        select `value` from config where `key`=#{key} 
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from config where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="Long">
+        update config set status = 0  where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="ConfigBean">
+        select * from config
+    </select>
+    
+    <select id="queryList" resultType="ConfigBean" parameterType="ConfigBean">
+         select * from config 
+        <where>
+         <include refid="find" />
+        </where> 
+    </select>
+    
+    <select id="count" resultType="long"  parameterType="ConfigBean">
+        select count(1) from config 
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+    <insert id="insert" parameterType="ConfigBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into config(name,key,value)
+         values(#{name},#{key},#{value})
+    </insert>
+    <update id="update" parameterType="ConfigBean" >
+        update `config`
+        <set>
+	         <if test="name!=null">`name` = #{name},</if>
+	         <if test="key!=null">`key` = #{key},</if>
+	         <if test="value!=null">`value` = #{value},</if>
+        </set>
+        where id = #{id}
+    </update>
+    
+    <update id="updateByKey" parameterType="ConfigBean" >
+        update `config` set `value` = #{value} where `key` = #{key}
+    </update>
+ 
+</mapper>

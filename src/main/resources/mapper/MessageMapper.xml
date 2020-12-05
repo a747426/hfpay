@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiongzai.pay.dao.MessageDao" >
+  <sql id="find">
+         <if test="id!=null">and id = #{id}</if>
+         <if test="phone!=null">and phone = #{phone} </if>
+         <if test="type!=null">and type = #{type}</if>
+         <if test="create_time!=null">and create_time = #{create_time}</if>
+    </sql>
+    <select id="getById" resultType="MessageBean" parameterType="Long">
+    	select * from message where id=#{id}
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from message where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="MessageBean">
+        select * from  message
+    </select>
+    
+    <select id="queryList" resultType="MessageBean" parameterType="MessageBean">
+    	select * from message
+    	<where>
+		<include refid="find" />
+		</where>
+		order by id desc
+    </select>
+    
+    <select id="count" resultType="long"  parameterType="MessageBean">
+        select count(1) from message
+        <where>
+        	<include refid="find" />
+        </where>
+    </select>
+    
+    <insert id="insert" parameterType="MessageBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into message(phone,content,create_time,type)
+         values(#{phone},#{content},#{create_time},#{type})
+    </insert>
+</mapper>

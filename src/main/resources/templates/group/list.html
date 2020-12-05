@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>分组列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- load css -->
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+	<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body class="layui-anim layui-anim-fadein">
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a>号码管理</a>
+        <a><cite>分组列表</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <div class="layui-row">
+        <div class="layui-form layui-col-md12 x-so">
+          <input id="name" type="text" name="name"   placeholder="分组名" autocomplete="off" class="layui-input">
+          <div class="layui-input-inline">
+            <select id="status" name="status">
+              <option value="">状态</option>
+              <option value="1">正常</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+           <div class="layui-input-inline">
+            <select id="dispatch_order_status" name="dispatch_order_status">
+              <option value="">派单状态</option>
+              <option value="1">开启</option>
+              <option value="0">停止</option>
+            </select>
+          </div>
+           <input type="text" name="timeStr" id="timeStr" readonly="readonly"
+		    placeholder="创建日期" class="layui-input inputHeight"
+			style="margin-top: 2px;">
+          <button id="searchBtn" data-type="reload" class="layui-btn"  lay-submit="" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
+        </div>
+      </div>
+      <xblock>
+      <button class="layui-btn" onclick="x_admin_show('新增分组','/group/addPage.html',465,350)"><i class="layui-icon"></i>新增</button>
+      </xblock>
+      <table class="layui-hide" id="table1" lay-filter="tool1"></table>
+      <script type="text/html" id="bar1">
+		{{#  if(d.dispatch_order_status == 1){ }}
+ 		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="orderFlag">停止派单</a>
+		{{#  }else{  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="orderFlag">开启派单</a>
+		{{#  }  }}
+		{{#  if(d.status == 1){ }}
+ 		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">禁用</a>
+		{{#  }else{  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="del">启用</a>
+		{{#  }  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="update" onclick="x_admin_show('修改信息','/group/updatePage.html?id={{d.id}}',465,350)">修改</a>
+		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="remove">删除</a>
+		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="removeAllCard">删除所有号码</a>
+		</script>
+      </div>
+<script type="text/html" id="statusTpl">
+{{#  if(d.status == 1){ }}
+<span style="color: green;">正常</span>
+{{#  }else{  }}
+<span style="color: red;">禁用</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="dispatchOrderStatusTpl">
+{{#  if(d.dispatch_order_status == 1){ }}
+<span style="color: green;">开启</span>
+{{#  }else{  }}
+<span style="color: red;">停止</span>
+{{#  }  }}
+</script>
+<script>
+      layui.use(['laydate', 'laypage', 'table'], function(){
+        var laydate = layui.laydate,
+        table = layui.table, //表格
+        laypage = layui.laypage; //分页
+        //执行一个 table 实例
+        table.render({
+          elem: '#table1'
+          ,height: 650
+          ,limit: 14
+          ,limits:[14,20,30,40,50,60,70,80,90]
+          ,url: '[[@{/group/list.html}]]' //数据接口
+          ,id:'table1'
+          ,page: true
+          ,cols: [
+           [
+            {field: 'id', title: 'ID', width:'6%', sort: true, align:'center',fixed: 'left'}
+            ,{field: 'name', title: '分组名称', width: '9%', align:'center'}
+            ,{field: 'card_count', title: '手机卡总数', width: '8%', align:'center'}
+            ,{field: 'work_card_count', title: '正常卡数', width: '8%', align:'center'}
+            ,{field: 'all_income', title: '总交易额', width: '9%', align:'center'}
+            ,{field: 'yesterday_income', title: '昨日交易额', width: '7%', align:'center'}
+            ,{field: 'today_income', title: '今日交易额', width: '7%', align:'center'}
+           /*  ,{field: 'remarks', title: '备注', align:'center', width: '12%'} */
+            ,{field: 'dispatch_order_status', title: '派单状态', width: '6%',templet:'#dispatchOrderStatusTpl', align:'center'}
+            ,{field: 'status', title: '状态', width: '6%',templet:'#statusTpl', align:'center'}
+            ,{field: 'create_time', title: '创建时间', width: '12%', align:'center'}
+            ,{fixed: 'right', title: '操作',align:'center', toolbar: '#bar1', width:'21%'}
+          ]
+          ]
+        });
+        $('#searchBtn').on('click', function(){
+        	var index = layer.msg('查询中，请稍候...',{icon: 16,time:false,shade:0});
+        	table.reload('table1', {
+    	        page: {
+    	          curr: 1 //重新从第 1 页开始
+    	        }
+    	        ,where: {
+    	        	'name': $('#name').val(),
+    	        	'timeStr': $('#timeStr').val(),
+    	            'status': $('#status').val(),
+    	            'dispatch_order_status': $('#dispatch_order_status').val(),
+    	        }
+    	      });
+        	layer.close(index);
+       });
+        var endDate = laydate.render({//渲染结束时间选择  
+			elem : '#timeStr',//通过id绑定html中插入的end  
+			done : function(value, dates) {
+			}
+		});
+      //监听工具条
+        table.on('tool(tool1)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+          var data = obj.data //获得当前行数据
+          ,layEvent = obj.event; //获得 lay-event 对应的值
+          if(layEvent === 'detail'){
+            //alert(JSON.stringify(data));
+          } 
+          else if(layEvent === 'removeAllCard'){
+        	  layer.confirm('确认删除分组下所有号码？请先确认卡密是否获取完毕？', function(index){
+                  $.post('[[@{/group/removeAllCard.html}]]',{'id':data.id},function(data){
+                	  layer.close(index);
+                	  layer.msg(data.msg);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'name': $('#name').val(),
+                  	        	'timeStr': $('#timeStr').val(),
+                	            'status': $('#status').val(),
+                	            'dispatch_order_status': $('#dispatch_order_status').val(),
+                  	        }
+                  	      });
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'remove'){
+        	  layer.confirm('将删除分组下所有号码？请先确认卡密是否获取完毕？', function(index){
+                  $.post('[[@{/group/remove.html}]]',{'id':data.id},function(data){
+                	  layer.close(index);
+                	  layer.msg(data.msg);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: $(".layui-laypage-em").next().html() //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'name': $('#name').val(),
+                  	        	'timeStr': $('#timeStr').val(),
+                	            'status': $('#status').val(),
+                	            'dispatch_order_status': $('#dispatch_order_status').val(),
+                  	        }
+                  	      });
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }else if(layEvent === 'del'){
+        	  layer.confirm(data.status==0?'确认启用?':'禁用后号码不会保持在线', function(index){
+                  $.post('[[@{/group/updateStatus.html}]]',{'id':data.id,'status':data.status},function(data){
+                	  layer.close(index);
+                	  layer.msg(data.msg);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: 1 //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'name': $('#name').val(),
+                  	        	'timeStr': $('#timeStr').val(),
+                	            'status': $('#status').val(),
+                	            'dispatch_order_status': $('#dispatch_order_status').val(),
+                  	        }
+                  	      });
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+          else if(layEvent === 'orderFlag'){
+        	  layer.confirm(data.dispatch_order_status==1?'确认停止派单?':'确认开启派单?', function(index){
+                  $.post('[[@{/group/updateDispatchOrderStatus.html}]]',{'id':data.id,'dispatch_order_status':data.dispatch_order_status},function(data){
+                	  layer.close(index);
+                	  layer.msg(data.msg);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: 1 //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'name': $('#name').val(),
+                  	        	'timeStr': $('#timeStr').val(),
+                	            'status': $('#status').val(),
+                	            'dispatch_order_status': $('#dispatch_order_status').val(),
+                  	        }
+                  	      });
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

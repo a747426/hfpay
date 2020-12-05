@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>支付测试</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- load css -->
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+    <link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body>
+    <div class="x-body">
+        <form class="layui-form">
+             <div class="layui-form-item">
+              <label for="amount" class="layui-form-label">
+                  <span class="x-red"></span>金额
+              </label>
+              <div class="layui-input-inline">
+              	<select id="amount" name="amount" lay-verify="required">
+              	  <option value="">请选择金额</option>
+	              <option  value="20" >20</option>
+	              <option  value="30" >30</option>
+	              <option  value="50" >50</option>
+	              <option  value="100" >100</option>
+	              <option  value="200" >200</option>
+	              <option  value="300" >300</option>
+	            </select>
+              </div>
+              <div class="layui-form-mid layui-word-aux">
+                  <span class="x-red">*</span>
+              </div>
+          </div>
+           <div class="layui-form-item">
+              <label for="pay_type" class="layui-form-label">
+                  <span class="x-red"></span>支付类型
+              </label>
+	           <div class="layui-input-inline">
+	            <select id="pay_type" name="pay_type" lay-verify="required">
+	             <option value="alipay">支付宝</option>
+	             <option value="wechat">微信</option>
+	            </select>
+	          </div>
+	          <div class="layui-form-mid layui-word-aux">
+                  <span class="x-red">*</span>
+              </div>
+          </div>
+          <div class="layui-form-item">
+              <label for="L_repass" class="layui-form-label">
+              </label>
+              <button  class="layui-btn" lay-filter="add" lay-submit="">
+                 	 发起支付
+              </button>
+          </div>
+      </form>
+    </div>
+    <script>
+        layui.use(['form','layer'], function(){
+            $ = layui.jquery;
+          var form = layui.form
+          ,layer = layui.layer;
+        
+          //监听提交
+          form.on('submit(add)', function(data){
+        	  $.post('[[@{/api/testPay.html}]]',data.field,function(data)
+        	          {
+        	      		if(data.code==1)
+        	      		{
+        	      			top.location.href = data.data;
+        	      		}
+        	      		else
+        	      		{
+        	      			layer.msg(data.msg);
+        	      		}
+        	          })
+        	 return false;
+          });
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>在线查单</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- load css -->
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+	<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body class="layui-anim layui-anim-fadein">
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a>号码管理</a>
+        <a><cite>查单</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <table class="layui-hide" id="table1" lay-filter="tool1"></table>
+      </div>
+<script type="text/html" id="statusTpl">
+{{#  if(d.orderState == "02"){ }}
+<span style="color: green;">已支付</span>
+{{#  }else if(d.orderState == "09"){  }}
+<span style="color: red;">已退款</span>
+{{#  }else{  }}
+<span>未支付</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="channelTypeTpl">
+{{#  if(d.channelType == 308){ }}
+<span>手厅</span>
+{{#  }else{  }}
+<span>网厅</span>
+{{#  }  }}
+</script>
+<script>
+      layui.use(['laydate', 'laypage', 'table', "upload"], function(){
+        var laydate = layui.laydate,
+        table = layui.table, //表格
+        laypage = layui.laypage, //分页
+        upload = layui.upload;//主要是这个
+        //执行一个 table 实例
+        table.render({
+          elem: '#table1'
+          ,height: 500
+          ,limit: 14
+          ,limits:[90]
+          ,url: '[[@{/card/onlineOrderList.html?cardId=}]]'+ '[[${cardId}]]'//数据接口
+          ,id:'table1'
+          ,page: true
+          ,cols: [
+           [
+            {field: 'orderId', title: '联通订单号', width:'20%', sort: true, align:'center',fixed: 'left'}
+            ,{field: 'amount', title: '订单金额', width: '20%', align:'center'}
+            ,{field: 'channelType', title: '订单类型', width: '20%', align:'center',templet:'#channelTypeTpl'}
+            ,{field: 'orderTime', title: '发起时间', width: '20%', align:'center'}
+            ,{field: 'orderState', title: '支付状态', width: '20%', align:'center',templet:'#statusTpl'}
+          ]
+          ]
+        });
+        $('#searchBtn').on('click', function(){
+        	var index = layer.msg('查询中，请稍候...',{icon: 16,time:false,shade:0});
+        	table.reload('table1', {
+    	        page: {
+    	          curr: 1 //重新从第 1 页开始
+    	        }
+    	        ,where: {
+    	        	'phone': $('#phone').val(),
+    	        	'type': $('#type').val()
+    	        }
+    	      });
+        	layer.close(index);
+       });
+        
+      });
+    </script>
+  </body>
+</html>

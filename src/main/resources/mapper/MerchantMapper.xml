@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiongzai.pay.dao.MerchantDao">
+   <sql id="find">
+         <if test="id!=null">and id = #{id}</if>
+         <if test="status!=null">and status = #{status}</if>
+    </sql>
+    
+    <select id="getById" resultType="MerchantBean" parameterType="Long">
+        select * from merchant where id=#{id} 
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from merchant where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="Long">
+        update merchant set status = 0  where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="MerchantBean">
+        select * from merchant
+    </select>
+    
+    <select id="queryList" resultType="MerchantBean" parameterType="MerchantBean">
+    	select *,ifnull((select sum(amount) from `order` where merchant_id=merchant.id and `status`=1 and create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE))),0) as today_income from merchant
+        <where>
+         <include refid="find" />
+        </where>
+    </select>
+    
+    <select id="count" resultType="int"  parameterType="MerchantBean">
+        select count(1) from merchant 
+        <where>
+        <include refid="find" />
+        </where> 
+        
+    </select>
+    
+    <insert id="insert" parameterType="MerchantBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into merchant(nick_name,pay_key,create_time,remarks)
+         values(#{nick_name},#{pay_key},#{create_time},#{remarks})
+    </insert>
+    <update id="update" parameterType="MerchantBean" >
+        update merchant
+        <set>
+	         <if test="remarks!=null">remarks = #{remarks},</if>
+	         <if test="nick_name!=null">nick_name = #{nick_name},</if>
+	         <if test="pay_key!=null">pay_key = #{pay_key},</if>
+	         <if test="status!=null">status = #{status},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiongzai.pay.dao.CdkeyDao" >
+  <sql id="find">
+         <if test="id!=null">and cdkey.id = #{id}</if>
+         <if test="no!=null">and cdkey.no = #{no} </if>
+         <if test="pwd!=null">and cdkey.pwd = #{pwd}</if>
+         <if test="status!=null">and cdkey.status = #{status}</if>
+         <if test="is_use!=null">and cdkey.is_use = #{is_use}</if>
+         <if test="face_value!=null">and cdkey.face_value = #{face_value}</if>
+         <if test="card_id!=null">and cdkey.card_id = #{card_id}</if>
+         <if test="group_id!=null">and card.group_id = #{group_id}</if>
+         <if test="com!=null">and card.com = #{com}</if>
+         <if test="card_no!=null">and cdkey.card_no = #{card_no}</if>
+         <if test="create_time!=null">and cdkey.create_time &gt;= #{create_time}</if>
+         <if test="unicom_order_id!=null">and cdkey.unicom_order_id = #{unicom_order_id}</if>
+         <if test="order_id!=null">and cdkey.order_id = #{order_id}</if>
+    </sql>
+    <select id="getById" resultType="CdkeyBean" parameterType="Long">
+    	select * from cdkey where id=#{id}
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from cdkey where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="Long">
+        update cdkey set status = 0  where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="CdkeyBean">
+        select * from  cdkey
+    </select>
+    
+    <select id="getAmountSum" resultType="Integer">
+        select ifnull(sum(face_value),0) from cdkey
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+    <select id="notExportSumToday" resultType="Integer">
+        select ifnull(sum(face_value),0) from cdkey where `status`=1 and is_use=0 and create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE))
+    </select>
+	<select id="exportSumToday" resultType="Integer">
+        select ifnull(sum(face_value),0) from cdkey where `status`=2 and is_use=0 and create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE))
+    </select>
+	<select id="notGetSumToday" resultType="Integer">
+	 	select ifnull(sum(amount),0) from `order` where `status`=1 and get_cdk_status!=1 and create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE))
+    </select>
+    <select id="getCdkList" resultType="CdkeyBean" parameterType="CdkeyBean">
+    	select cdkey.* from cdkey
+    	<where>
+        <include refid="find" />
+        </where>
+    	 order by cdkey.id desc
+    </select>
+	<select id="getTodayList" resultType="CdkeyBean">
+    	select cdkey.* from cdkey where cdkey.create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE)) order by cdkey.id desc
+    </select>
+    <select id="getYesTodayList" resultType="CdkeyBean">
+    	select cdkey.* from cdkey where cdkey.create_time&lt;UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE)) and cdkey.create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE()AS DATE) - INTERVAL 1 DAY) order by cdkey.id desc
+    </select>
+    <select id="queryList" resultType="CdkeyBean" parameterType="CdkeyBean">
+    	select cdkey.* from cdkey
+    	<where>
+			<include refid="find" />
+		</where>
+		order by cdkey.id desc
+    </select>
+    <select id="count" resultType="long"  parameterType="CdkeyBean">
+        select count(1) from cdkey
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+   
+    <insert id="insert" parameterType="CdkeyBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into cdkey(card_id,card_no,face_value,create_time,unicom_order_id,order_id,`no`,`pwd`,is_use)
+         values(#{card_id},#{card_no},#{face_value},#{create_time},#{unicom_order_id},#{order_id},#{no},#{pwd},#{is_use})
+    </insert>
+    <update id="update" parameterType="CdkeyBean" >
+        update cdkey
+        <set>
+            <if test="status!=null">status=#{status},</if>
+            <if test="is_use!=null">is_use=#{is_use},</if>
+            <if test="no!=null">`no`=#{no},</if>
+            <if test="pwd!=null">`pwd`=#{pwd},</if>
+            <if test="export_time!=null">export_time=#{export_time},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

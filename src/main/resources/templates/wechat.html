@@ -1,0 +1,286 @@
+<html class="normal ">
+<head>
+    <meta charset="UTF-8">
+    <title>微信</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <style>
+        *,
+        :before,
+        :after {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, form, fieldset, legend, input, textarea, p, blockquote, th, td {
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        fieldset, img {
+            border: 0;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        caption, th {
+            text-align: left;
+        }
+
+        q:before, q:after {
+            content: "";
+        }
+
+        input:password {
+            ime-mode: disabled;
+        }
+
+        :focus {
+            outline: 0;
+        }
+
+        html, body {
+            text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
+            font-family: "Helvetica Neue", Helvetica, STHeiTi, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        html {
+            background: #23ad36;
+        }
+
+        .download-cover {
+            display: block;
+            height: 360px;
+            background-position: center 0;
+            background-repeat: no-repeat;
+            -webkit-background-size: 320px auto;
+            -moz-background-size: 320px auto;
+            -ms-background-size: 320px auto;
+            -o-background-size: 320px auto;
+            background-size: 320px auto;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .download-cover .download-cover-slogan,
+        .download-cover .download-cover-picture {
+            display: none;
+        }
+
+        .download-interaction {
+            height: 42px;
+            padding-bottom: 20px;
+        }
+
+        .download-interaction .download-button {
+            display: none;
+            text-decoration: none;
+            font-size: 16px;
+            color: #ffffff;
+            letter-spacing: 2px;
+            margin: 30px 48px;
+            background: #319bd0;
+            height: 42px;
+            line-height: 42px;
+            text-align: center;
+            border: 1px solid #7f7f87;
+            border-top-left-radius: 2px;
+            border-top-right-radius: 2px;
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+        }
+
+        .download-interaction .download-opening,
+        .download-interaction .download-asking {
+            display: none;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .download-interaction.download-interaction-asking .download-asking,
+        .download-interaction.download-interaction-opening .download-opening,
+        .download-interaction.download-interaction-button .download-button {
+            display: block;
+        }
+
+        .download-putcenter,
+        .copyright {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+
+        .download-putcenter {
+            padding-top: 10px;
+        }
+
+        .download-putcenter .version,
+        .download-putcenter .date,
+        .download-putcenter .size {
+            margin-left: 3px;
+        }
+
+        .copyright {
+            padding-bottom: 10px;
+        }
+
+        .countdown-text {
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        #countdown-inner {
+            color: #ffffff;
+            font-size: 24px;
+        }
+
+        .normal .download-cover {
+        background-image: url("/images/qr_wechat.png");
+	    }
+	
+	    html {
+	        background-color: #23ad36;
+	    }
+	
+	    a {
+	        color: #8cffff;
+	    }
+	
+	    .download-interaction .download-button {
+	        background: #319bd0;
+	        border: 1px solid #fff;
+	    }
+	
+	    .download-putcenter, .copyright {
+	        color: #fff;
+	    }
+    </style>
+</head>
+<body>
+<div class="download-view-wrap" id="downloadViewWrap">
+    <div class="wrap-view-addon-1"></div>
+    <div class="wrap-view-addon-2"></div>
+    <div class="wrap-view-addon-3"></div>
+    <div class="wrap-view-addon-4"></div>
+    <div class="download-inner-view" id="downloadInnerView">
+        <div class="inner-view-addon-1"></div>
+        <div class="inner-view-addon-2"></div>
+        <div class="inner-view-addon-3"></div>
+        <div class="inner-view-addon-4"></div>
+        <div class="download-view" id="downloadView">
+            <div class="download-view-addon-1"></div>
+            <div class="download-view-addon-2"></div>
+            <div class="download-view-addon-3"></div>
+            <div class="download-view-addon-4"></div>
+            <div class="download-cover" id="downloadCover" style="background-image: url('/images/qr_wechat.png');">
+            <div class="download-cover-logo" id="downloadCoverLogo"></div>
+            <div class="download-cover-slogan" id="downloadCoverSlogan"></div>
+            <div class="download-cover-picture" id="downloadCoverPicture">
+                <div class="download-cover-picture-1"></div>
+                <div class="download-cover-picture-2"></div>
+                <div class="download-cover-picture-3"></div>
+                <div class="download-cover-picture-4"></div>
+            </div>
+        </div>
+        <div id="J_downloadInteraction" class="download-interaction download-interaction-button">
+            <div class="inner-interaction">
+                <div class="countdown-text" id="amountMsg"><span style="font-size:20px;">付款￥<span th:text="${amount}"></span></span></div>
+                <div class="countdown-text" id="timeMsg"></div>
+                <div class="countdown-text" id="tipMsg" style="color: red;font-weight: bold;font-size: 18px;">超时支付，无法到账</div>
+                <div class="countdown-text" style="margin-top: 10px; color: red;font-size: 20px;font-weight: bold;"><span></span></div>
+                <a id="J_downloadBtn" th:href="${payUrl}" rel="noreferrer" class="download-button">立即支付</a></br>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<div class="base-info">
+    <!-- <p class="copyright">微信版权所有 © 2018 - 2021</p> -->
+</div>
+
+<script>
+    var intDiff = parseInt('[[${leftTime}]]');//倒计时总秒数量
+    function timer(intDiff){
+        window.setInterval(function(){
+            var day=0,
+                hour=0,
+                minute=0,
+                second=0;//时间默认值
+            if(intDiff > 0){
+                day = Math.floor(intDiff / (60 * 60 * 24));
+                hour = Math.floor(intDiff / (60 * 60)) - (day * 24);
+                minute = Math.floor(intDiff / 60) - (day * 24 * 60) - (hour * 60);
+                second = Math.floor(intDiff) - (day * 24 * 60 * 60) - (hour * 60 * 60) - (minute * 60);
+            }
+            if (minute <= 9) minute = '0' + minute;
+            if (second <= 9) second = '0' + second;
+            document.getElementById ("timeMsg").innerHTML   ='<span>请在'+minute+'分'+second+'秒 </span><span>内完成支付</span>';
+            intDiff--;
+            if(intDiff<=0)
+            {
+            	$('#J_downloadBtn').hide();
+            	$('#amountMsg').hide();
+            	$('#tipMsg').hide();
+            	$('#timeMsg').html('订单已超时，请重新发起支付'); 
+            }
+        }, 1000);
+    }
+    timer(intDiff);
+    
+    var wechat_safe_flag= '[[${wechat_safe_flag}]]';
+	$(function() {
+		if(intDiff<=0)
+        {
+         	return;
+        }
+		if(wechat_safe_flag==1)
+		{
+		    layui.use('form', function(){
+		    	layer.open({
+		    	    title: [
+		    	      '温馨提示',
+		    	      'background-color: #FF4351; color:#fff;'
+		    	    ]
+		    		,closeBtn: 0
+		    		,btn: '我知道了'
+		    	    ,content:'<span style="color:red;font-size:1.1em;font-weight:700;">请在下个界面，选择微信支付。并在'+intDiff+'秒内完成支付，超时支付无法到账！</span>'
+		    	    ,success: function (layero) {
+		    	    	var btn = layero.find('.layui-layer-btn');
+		    	    	btn.css('text-align', 'center');
+		    	    }
+		    	    ,yes: function(index, layer){
+		    	    	top.location.href = $('#J_downloadBtn').attr('href');
+		    	       }
+		    	  });
+		    });
+		}
+		else
+		{
+			//top.location.href = $('#J_downloadBtn').attr('href');
+		}
+	})
+</script>
+
+</body>
+</html>

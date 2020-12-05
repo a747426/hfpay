@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiongzai.pay.dao.OrderDao">
+   <sql id="find">
+         <if test="id!=null">and `order`.id = #{id}</if>
+         <if test="amount!=null">and `order`.amount = #{amount}</if>
+         <if test="card_id!=null">and `order`.card_id = #{card_id}</if>
+         <if test="card_no!=null">and `order`.card_no = #{card_no}</if>
+         <if test="status!=null">and `order`.status = #{status}</if>
+         <if test="notify_status!=null">and `order`.notify_status = #{notify_status}</if>
+         <if test="pay_type!=null">and `order`.pay_type = #{pay_type}</if>
+         <if test="create_time!=null">and `order`.create_time &gt;= #{create_time}</if>
+         <if test="merchant_order_no!=null">and `order`.merchant_order_no = #{merchant_order_no}</if>
+         <if test="merchant_id!=null">and `order`.merchant_id = #{merchant_id}</if>
+         <if test="notify_times!=null">and `order`.notify_times &lt; #{notify_times}</if>
+         <if test="unicom_order_id!=null">and `order`.unicom_order_id = #{unicom_order_id}</if>
+         <if test="get_cdk_status!=null">and `order`.get_cdk_status = #{get_cdk_status}</if>
+         <if test="group_id!=null">and `card`.group_id = #{group_id}</if>
+    </sql>
+    
+    <select id="getById" resultType="OrderBean" parameterType="long">
+        select * from `order` where id=#{id} 
+    </select>
+    <delete id="removeById" parameterType="long">
+        delete from `order` where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="long">
+        update `order` set status = 0  where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="OrderBean">
+        select * from `order`
+    </select>
+    
+    <select id="notGetCdkPageList" resultType="OrderBean" parameterType="OrderBean">
+         select `order`.*,`group`.name as 'group_name' from `order`,`card`,`group` where `order`.card_id=`card`.id and `card`.group_id=`group`.id and `order`.status=1 and `order`.get_cdk_status in(-2,-1,0,2,3)
+         <include refid="find" />
+        order by `order`.id desc
+    </select>
+    
+    <select id="queryList" resultType="OrderBean" parameterType="OrderBean">
+         select `order`.* from `order`
+         <where>
+         	<include refid="find" />
+         </where>
+        order by `order`.id desc
+    </select>
+    
+    <select id="queryDayFinanceList" resultType="OrderBean" parameterType="OrderBean">
+         select FROM_UNIXTIME(`order`.create_time, '%Y-%m-%d') as time,count(1) as all_count,sum(amount) as all_sum,
+		(select count(1) from `order` where FROM_UNIXTIME(`order`.create_time, '%Y-%m-%d')=time and `status`=1) as success_count,
+		(select ifnull(sum(amount),0) from `order` where FROM_UNIXTIME(`order`.create_time, '%Y-%m-%d')=time and `status`=1) as success_sum
+		 from `order` GROUP BY time ORDER BY time desc
+    </select>
+    
+    <select id="count" resultType="long"  parameterType="OrderBean">
+        select count(1) from `order` 
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+    
+    <select id="getingCdkCount" resultType="long"  parameterType="long">
+        select count(1) from `order` where card_id=#{card_id} and get_cdk_status in(-2,-1)
+    </select>
+
+    <select id="sumMoney" resultType="double"  parameterType="OrderBean">
+        select ifnull(sum(amount),0) from `order` 
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+    
+    <select id="needGetCdkeyList" resultType="OrderBean">
+    	select id,card_id,unicom_order_id from `order` where `status`=1 and get_cdk_status=0 GROUP BY card_id
+    </select>
+    
+    <select id="getNeedCheckOrderList" resultType="OrderBean">
+    	 select id,card_id,unicom_order_id,wx_h5_return from `order` where `order`.`status`=0 and `order`.create_time&gt;unix_timestamp(now())-330
+    </select>
+
+    <insert id="insert" parameterType="OrderBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into `order`(merchant_id,amount,create_time,merchant_order_no,pay_type,card_id,card_no,notify_url,unicom_order_id,pay_url,wx_h5_return)
+         values(#{merchant_id},#{amount},#{create_time},#{merchant_order_no},#{pay_type},#{card_id},#{card_no},#{notify_url},#{unicom_order_id},#{pay_url},#{wx_h5_return})
+    </insert>
+    
+    <select id="selectLastByUnicomOrderId" resultType="OrderBean"  parameterType="String">
+    	select id,`status`,`create_time` from `order` where unicom_order_id=#{unicomOrderId} ORDER BY id DESC LIMIT 1
+    </select>
+    
+    <update id="successByUnicomOrderId" parameterType="String">
+        update `order` set `status`=1,pay_time=unix_timestamp(now()) where unicom_order_id=#{unicomOrderId} ORDER BY id DESC LIMIT 1
+    </update>
+    
+    <update id="reGetAll">
+        update `order` set get_cdk_status=0 where `status`=1 and get_cdk_status in(2,3)
+    </update>
+    
+    <update id="receiveCdkSmsTimeOut">
+        update `order` set get_cdk_status=2 where get_cdk_status=-2 and send_get_cdk_sms_time&lt;unix_timestamp(now())-65
+    </update>
+    
+    <update id="updateGetCdkSmsBySendTime">
+        update `order` set get_cdk_sms=#{verCode},get_cdk_status=-1,send_get_cdk_sms_time=unix_timestamp(now()) where card_no=#{phone} and get_cdk_status=-2 ORDER BY send_get_cdk_sms_time ASC LIMIT 1
+    </update>
+    
+    <update id="update" parameterType="OrderBean">
+        update `order`
+        <set>
+	        <if test="status!=null">status = #{status},</if>
+	        <if test="pay_time!=null">pay_time = #{pay_time},</if>
+	        <if test="notify_time!=null">notify_time = #{notify_time},</if>
+	        <if test="notify_times!=null">notify_times = #{notify_times},</if>
+	        <if test="notify_status!=null">notify_status = #{notify_status},</if>
+	        <if test="get_cdk_status!=null">get_cdk_status = #{get_cdk_status},</if>
+	        <if test="send_get_cdk_sms_time!=null">send_get_cdk_sms_time = #{send_get_cdk_sms_time},</if>
+	        <if test="get_cdk_sms!=null">get_cdk_sms = #{get_cdk_sms},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

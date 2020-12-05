@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>商户列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- load css -->
+    <link rel="stylesheet" th:href="@{/css/font.css}" />
+	<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+<body class="layui-anim layui-anim-fadein">
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a>商户管理</a>
+        <a><cite>商户列表</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <div class="layui-row">
+        <div class="layui-form layui-col-md12 x-so">
+          <input id="id" type="text" name="id"   placeholder="商户号" autocomplete="off" class="layui-input">
+          <div class="layui-input-inline">
+            <select id="status" name="status">
+              <option value="">全部</option>
+              <option value="1">正常</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+          <button id="searchBtn" data-type="reload" class="layui-btn"  lay-submit="" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
+          <button class="layui-btn" style="margin-left: 50px;" onclick="downLoadApiDoc()">下载文档</button>
+        </div>
+      </div>
+      <xblock>
+       <button class="layui-btn" onclick="x_admin_show('添加商户','/merchant/addPage.html',480,550)"><i class="layui-icon"></i>新增</button>
+      </xblock>
+      <table class="layui-hide" id="table1" lay-filter="tool1"></table>
+      <script type="text/html" id="bar1">
+        <a class="layui-btn layui-btn layui-btn-xs" lay-event="edit" onclick="x_admin_show('修改信息','/merchant/updatePage.html?mid={{d.id}}',480,550)">修改</a>
+		{{#  if(d.status == 1){ }}
+ 		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">禁用</a>
+		{{#  }else{  }}
+		<a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="del">启用</a>
+		{{#  }  }}
+		</script>
+      </div>
+<script type="text/html" id="statusTpl">
+{{#  if(d.status == 1){ }}
+<span style="color: green;">正常</span>
+{{#  }else{  }}
+<span style="color: red;">禁用</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="settTypeTpl">
+{{#  if(d.settType == 1){ }}
+<span style="color: green;">是</span>
+{{#  }else{  }}
+<span style="color: red;">否</span>
+{{#  }  }}
+</script>
+<script type="text/html" id="canSettAmountTpl">
+{{# 
+if(d.leftAmount>0)
+{
+	return  (d.leftAmount*(1-d.royalty)).toFixed(2);
+}
+}}
+</script>
+<script>
+function downLoadApiDoc()
+{
+	 window.open('[[@{/doc/doc.docx}]]'); 
+}
+      layui.use(['laydate', 'laypage', 'table'], function(){
+        var laydate = layui.laydate,
+        table = layui.table, //表格
+        laypage = layui.laypage; //分页
+        //执行一个 table 实例
+        table.render({
+          elem: '#table1'
+          ,height: 650
+          ,limit: 15
+          ,limits:[15,20,30,40,50,60,70,80,90]
+          ,url: '[[@{/merchant/list.html}]]' //数据接口
+          ,id:'table1'
+          ,page: true
+          ,cols: [
+           [
+            {field: 'id', title: '商户号', width:'10%', sort: true, align:'center',fixed: 'left'}
+            ,{field: 'nick_name', title: '商户名称', width:'10%', align:'center'}
+            ,{field: 'pay_key', title: '秘钥', width:'18%', align:'center'}
+            ,{field: 'create_time', title: '创建时间', align:'center',width: '12%'}
+            ,{field: 'today_income', title: '今日交易额', align:'center',width: '12%'}
+            ,{field: 'status', title: '状态', width: '10%',templet:'#statusTpl', align:'center'}
+            ,{field: 'remarks', title: '备注', width: '17%', align:'center'}
+            ,{fixed: 'right', title: '操作',align:'center', toolbar: '#bar1', width:'10%'}
+          ]
+          ]
+        });
+        $('#searchBtn').on('click', function(){
+        	var index = layer.msg('查询中，请稍候...',{icon: 16,time:false,shade:0});
+        	table.reload('table1', {
+    	        page: {
+    	          curr: 1 //重新从第 1 页开始
+    	        }
+    	        ,where: {
+    	        	'id': $('#id').val(),
+    	            'nick_name': $('#nick_name').val(),
+    	            'status': $('#status').val()
+    	        }
+    	      });
+        	layer.close(index);
+       });
+        
+      //监听工具条
+        table.on('tool(tool1)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+          var data = obj.data //获得当前行数据
+          ,layEvent = obj.event; //获得 lay-event 对应的值
+          if(layEvent === 'edit'){
+          }
+     	  else if(layEvent === 'del'){
+        	  layer.confirm('认真的吗', function(index){
+                  $.post('[[@{/merchant/updateStatus.html}]]',{'id':data.id,'status':data.status},function(data){
+                	  layer.close(index);
+                	  if(data.code==0)
+                	  {
+                		  table.reload('table1', {
+                  	        page: {
+                  	          curr: 1 //重新从第 1 页开始
+                  	        }
+                  	        ,where: {
+                  	        	'id': $('#id').val(),
+                	            'nick_name': $('#nick_name').val(),
+                	            'status': $('#status').val()
+                  	        }
+                  	      });
+                	  }
+                	  else
+                	  {
+                		  layer.msg('修改失败');
+                	  }
+                  })
+                  //向服务端发送删除指令
+                });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

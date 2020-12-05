@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>欢迎页面</title>
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<link rel="stylesheet" th:href="@{/css/font.css}" />
+<link rel="stylesheet" th:href="@{/css/xadmin.css}" />
+</head>
+<body>
+	<div class="x-body layui-anim layui-anim-up">
+		<blockquote class="layui-elem-quote">
+			欢迎管理员： <span class="x-red" th:text="${session.auser.nick_name}"></span>！当前时间：<span
+				th:text="${currentDateTime}"></span>
+		</blockquote>
+		<fieldset class="layui-elem-field">
+			<legend>数据统计</legend>
+			<div class="layui-field-box">
+				<div class="layui-col-md12">
+					<div class="layui-card">
+						<div class="layui-card-body">
+							<div class="layui-carousel x-admin-carousel x-admin-backlog"
+								lay-anim="" lay-indicator="inside" lay-arrow="none"
+								style="width: 100%; height: 100px;">
+								<div carousel-item="">
+									<ul class="layui-row layui-col-space10 layui-this">
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>平台总入金(元)</h3>
+												<p>
+													<cite th:text="${allOrderSum}"></cite>
+												</p>
+										</a></li>
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>今日平台总入金(元)</h3>
+												<p>
+													<cite th:text="${todayOrderSum}"></cite>
+												</p>
+										</a></li>
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>今日微信总入金(元)</h3>
+												<p>
+													<cite th:text="${todayOrderSumWx}"></cite>
+												</p>
+										</a></li>
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>今日支付宝总入金(元)</h3>
+												<p>
+													<cite th:text="${todayOrderSumAli}"></cite>
+												</p>
+										</a></li>
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>所有号码(个)</h3>
+												<p>
+													<cite th:text="${allCardCount}"></cite>
+												</p>
+										</a></li>
+										<li class="layui-col-xs2"><a href="javascript:;"
+											class="x-admin-backlog-body">
+												<h3>可用号码(个)</h3>
+												<p>
+													<cite th:text="${workCardCount}"></cite>
+												</p>
+										</a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+		<fieldset class="layui-elem-field">
+			<legend>系统信息</legend>
+			<div class="layui-field-box">
+				<table class="layui-table">
+					<tbody>
+						<tr>
+							<th>系统版本</th>
+							<td>1.0.1</td>
+						</tr>
+						<tr>
+							<th>服务器地址</th>
+							<td></td>
+						</tr>
+						<tr>
+							<th>操作系统</th>
+							<td>Centos7.4</td>
+						</tr>
+						<tr>
+							<th>运行环境</th>
+							<td>Tomcat 8.5</td>
+						</tr>
+						<tr>
+							<th>JDK版本</th>
+							<td>1.8</td>
+						</tr>
+						<tr>
+							<th>MYSQL版本</th>
+							<td>5.7</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</fieldset>
+		<fieldset class="layui-elem-field">
+			<legend>开发团队</legend>
+			<div class="layui-field-box">
+				<table class="layui-table">
+					<tbody>
+						<tr>
+							<th>版权所有</th>
+							<td></td>
+						</tr>
+						<tr>
+							<th>开发者</th>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</fieldset>
+	</div>
+</body>
+</html>

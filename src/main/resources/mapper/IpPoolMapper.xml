@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiongzai.pay.dao.IpPoolDao" >
+  <sql id="find">
+         <if test="id!=null">and id = #{id}</if>
+         <if test="ip!=null">and ip = #{ip} </if>
+         <if test="port!=null">and port = #{port}</if>
+         <if test="expire_time!=null">and expire_time = #{expire_time}</if>
+    </sql>
+    <select id="getById" resultType="IpPoolBean" parameterType="Long">
+    	select * from ip_pool where id=#{id}
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from ip_pool where id = #{id}
+    </delete>
+    
+    <delete id="removeExpired">
+        delete from ip_pool where expire_time&lt;unix_timestamp(now())+120
+    </delete>
+    
+    <select id="getOneCanUseIp" resultType="IpPoolBean">
+    	select * from ip_pool order by id desc limit 1
+    </select>
+   
+    <select id="queryAll" resultType="IpPoolBean">
+        select * from  ip_pool
+    </select>
+    
+    <select id="queryList" resultType="IpPoolBean" parameterType="IpPoolBean">
+    	select * from ip_pool
+    	<where>
+		<include refid="find" />
+		</where>
+		order by id desc
+    </select>
+    
+    <select id="count" resultType="long"  parameterType="IpPoolBean">
+        select count(1) from ip_pool
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+    <insert id="insert" parameterType="IpPoolBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into ip_pool(ip,port,expire_time,city)
+         values(#{ip},#{port},#{expire_time},#{city})
+    </insert>
+</mapper>

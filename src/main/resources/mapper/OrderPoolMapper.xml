@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiongzai.pay.dao.OrderPoolDao">
+   <sql id="find">
+         <if test="id!=null">and order_pool.id = #{id}</if>
+         <if test="amount!=null">and order_pool.amount = #{amount}</if>
+         <if test="card_id!=null">and order_pool.card_id = #{card_id}</if>
+         <if test="status!=null">and order_pool.status = #{status}</if>
+         <if test="is_use=null">and order_pool.is_use = #{is_use}</if>
+         <if test="order_no!=null">and order_pool.order_no = #{order_no}</if>
+         <if test="create_time!=null">and order_pool.create_time &lt;= #{create_time}</if>
+         <if test="update_time!=null">and order_pool.update_time &lt;= #{update_time}</if>
+         <if test="order_type!=null">and order_pool.order_type = #{order_type}</if>
+         <if test="pay_type!=null">and order_pool.order_type = #{order_type}</if>
+         <if test="card_no!=null">and order_pool.card_no = #{card_no}</if>
+    </sql>
+    
+    <select id="getById" resultType="OrderPoolBean" parameterType="long">
+        select * from order_pool where id=#{id} 
+    </select>
+    <select id="getWechatByUnicomOrderId" resultType="OrderPoolBean" parameterType="String">
+        select * from order_pool where unicom_order_id=#{unicomOrderId} and pay_type='wechat' and is_use=0
+    </select>
+    <select id="getByUnicomOrderId" resultType="OrderPoolBean" parameterType="String">
+        select * from order_pool where unicom_order_id=#{unicomOrderId}
+    </select>
+    <delete id="removeById" parameterType="long">
+        delete from order_pool where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="long">
+        update order_pool set `status` = 0  where id = #{id}
+    </delete>
+    
+    <delete id="removeByUnicomOrderId" parameterType="String">
+        delete from order_pool where unicom_order_id=#{unicomOrderId}
+    </delete>
+    
+    <delete id="deleteByUnicomOrderId" parameterType="String">
+        update order_pool set `status` = 0,update_time=unix_timestamp(now()) where unicom_order_id=#{unicomOrderId}
+    </delete>
+    
+     <update id="setUsedById" parameterType="long">
+        update order_pool set is_use=1 where id = #{id}
+    </update>
+    
+     <delete id="removeByCardId" parameterType="long">
+        delete from order_pool where card_id = #{cardId}
+    </delete>
+    
+    <delete id="removeByGroupId" parameterType="long">
+        delete from order_pool where card_id in(select id from card where group_id=#{groupId})
+    </delete>
+    
+    <delete id="removeTimeOutOrder">
+        delete from order_pool where create_time&lt;unix_timestamp(now())-1780
+    </delete>
+   
+    <select id="queryAll" resultType="OrderPoolBean">
+        select * from order_pool
+    </select>
+    
+    <select id="getLeftOrderCountByPayType" resultType="OrderPoolBean" parameterType="String">
+        select amount,count(1) as order_count from order_pool where `status`=1 and is_use=0 and pay_type=#{pay_type} and update_time&gt;unix_timestamp(now())-295 GROUP BY amount
+    </select>
+    
+    <select id="getLeftOrderCount" resultType="OrderPoolBean">
+        select amount,count(1) as order_count,pay_type from order_pool where `status`=1 and is_use=0 and update_time&gt;unix_timestamp(now())-295 GROUP BY amount,pay_type
+    </select>
+    
+    <select id="getCannotUseOrder" resultType="OrderPoolBean">
+          select order_pool.* from order_pool where is_use=0 and order_pool.update_time&lt;unix_timestamp(now())-360 order by unicom_order_id
+    </select>
+    
+    <update id="rePayAlipayOrder">
+          update order_pool set `status`=1,update_time=unix_timestamp(now()) where pay_type='alipay' and update_time&lt;unix_timestamp(now())-360
+    </update>
+    
+    <select id="getCannotUseAlipayOrder" resultType="OrderPoolBean">
+          select order_pool.* from order_pool where order_pool.pay_type='alipay' and order_pool.update_time&lt;unix_timestamp(now())-360
+    </select>
+    
+    <select id="getOneCanUseOrder" resultType="OrderPoolBean">
+          select * from order_pool where `status`=1 and update_time&gt;unix_timestamp(now())-295 and pay_type=#{pay_type}
+          and amount=#{amount} order by update_time LIMIT 1
+    </select>
+
+    <select id="getOneCanUseOrder1" resultType="OrderPoolBean">
+          select * from order_pool where `status`=1 and update_time&gt;unix_timestamp(now())-295 and pay_type=#{pay_type}
+          and amount=#{amount} order by rand() LIMIT 1
+    </select>
+    
+    <select id="queryList" resultType="OrderPoolBean" parameterType="OrderPoolBean">
+         select order_pool.* from order_pool
+         <where>
+         <include refid="find" />
+         </where>
+    </select>
+    
+    <select id="count" resultType="long"  parameterType="OrderPoolBean">
+        select count(1) from order_pool 
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+
+    <insert id="insert" parameterType="OrderPoolBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into order_pool(unicom_order_id,order_no,card_id,card_no,amount,pay_url,create_time,update_time,order_type,wx_h5_return,pay_type,`status`)
+         values(#{unicom_order_id},#{order_no},#{card_id},#{card_no},#{amount},#{pay_url},#{create_time},#{update_time},#{order_type},#{wx_h5_return},#{pay_type},#{status})
+    </insert>
+    
+    <update id="updateByUnicomOrderId" parameterType="String">
+        update order_pool set `status`=1 where unicom_order_id=#{unicomOrderId}
+    </update>
+    
+    <update id="update" parameterType="OrderPoolBean">
+        update order_pool
+        <set>
+	        <if test="status!=null">`status` = #{status},</if>
+	        <if test="is_use!=null">is_use = #{is_use},</if>
+	        <if test="pay_url!=null">pay_url = #{pay_url},</if>
+	        <if test="update_time!=null">update_time = #{update_time},</if>
+	        <if test="wx_h5_return!=null">wx_h5_return = #{wx_h5_return},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

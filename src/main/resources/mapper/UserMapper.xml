@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiongzai.pay.dao.UserDao" >
+  <sql id="find">
+         <if test="id!=null">and id = #{id}</if>
+         <if test="account!=null">and account = #{account} </if>
+         <if test="password!=null">and password = #{password}</if>
+         <if test="status!=null">and status = #{status}</if>
+    </sql>
+    <select id="getById" resultType="UserBean" parameterType="Long">
+    	select * from user where id=#{id}
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from user where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="Long">
+        update user set status = 0  where id = #{id}
+    </delete>
+   
+    <select id="queryAll" resultType="UserBean">
+        select * from  user
+    </select>
+    
+    <select id="queryList" resultType="UserBean" parameterType="UserBean">
+    	select * from user
+    	<where>
+		<include refid="find" />
+		</where>
+		order by id desc
+    </select>
+    <select id="count" resultType="long"  parameterType="UserBean">
+        select count(1) from user
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+   
+    <insert id="insert" parameterType="UserBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into user(account,nick_name,password,remarks,create_time,update_time)
+         values(#{account},#{nick_name},#{password},#{remarks},#{create_time},#{update_time})
+    </insert>
+    <update id="update" parameterType="UserBean" >
+        update user
+        <set>
+            <if test="nick_name!=null">nick_name=#{nick_name},</if>
+            <if test="remarks!=null">remarks=#{remarks},</if>
+            <if test="password!=null">password=#{password},</if>
+            <if test="status!=null">status=#{status},</if>
+            <if test="update_time!=null">update_time=#{update_time},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

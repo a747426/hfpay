@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jiongzai.pay.dao.CardDao" >
+  <sql id="find">
+         <if test="id!=null">and card.id = #{id}</if>
+         <if test="card_no!=null">and card.card_no = #{card_no} </if>
+         <if test="com!=null">and card.com = #{com}</if>
+         <if test="status!=null">and card.status = #{status}</if>
+         <if test="card_status!=null">and card.card_status = #{card_status}</if>
+         <if test="group_id!=null">and card.group_id = #{group_id}</if>
+         <if test="update_time!=null">and card.update_time &lt; #{update_time}</if>
+         <if test="_uop_id_cookie!=null">and card._uop_id_cookie=#{_uop_id_cookie}</if>
+         <if test="proxy_ip!=null">and card.proxy_ip=#{proxy_ip}</if>
+         <if test="web_ver_code!=null">and card.web_ver_code=#{web_ver_code}</if>
+         <if test="web_login_status!=null">and card.web_login_status=#{web_login_status}</if>
+         <if test="web_update_time!=null">and card.web_update_time &lt; #{web_update_time}</if>
+         <if test="app_place_order_flag!=null">and card.app_place_order_flag=#{app_place_order_flag}</if>
+         <if test="web_place_order_flag!=null">and card.web_place_order_flag=#{web_place_order_flag}</if>
+         <if test="buy_card_last_time!=null">and card.buy_card_last_time=#{buy_card_last_time}</if>
+    </sql>
+
+    <select id="getById" resultType="CardBean" parameterType="Long">
+    	select * from card where id=#{id}
+    </select>
+    <delete id="removeById" parameterType="Long">
+        delete from card where id = #{id}
+    </delete>
+    <delete id="deleteById" parameterType="Long">
+        update card set status = 0  where id = #{id}
+    </delete>
+    
+    <delete id="removeByGroupId" parameterType="long">
+        delete from card where group_id=#{groupId}
+    </delete>
+    
+    <update id="reSetBuyCardCount" parameterType="Long">
+        update card set buy_card_count=0
+    </update>
+    
+    <update id="reSetBuyCardStatus" parameterType="Long">
+        update card set web_place_order_flag=1,app_place_order_flag=1
+    </update>
+    
+    <update id="updateTimeOutEnChannelStr" parameterType="Long">
+        update card set en_channel_str=null where en_channel_str_update_time&lt;unix_timestamp(now())-1620
+    </update>
+   
+    <select id="queryAll" resultType="CardBean">
+        select * from  card
+    </select>
+    
+    <select id="getInvalidUopIdList" resultType="CardBean">
+    	select * from card where `status`=1 and card_status=1 and (_uop_id_cookie is null or _uop_id_cookie='')
+    </select>
+    
+    <select id="getNeedUpdateProxyList" resultType="CardBean">
+    	select card.* from card,`group` where card.group_id=`group`.id and `group`.status=1 and card.`status`=1 and (card.proxy_ip is null or card.proxy_ip='' or card.proxy_fail_times&gt;3 or card.proxy_expire_time&lt;unix_timestamp(now())+60)
+    </select>
+    
+    <select id="getNeedGetNewEnChannelStrList" resultType="CardBean" parameterType="CardBean">
+    	select card.* from card,`group` where card.group_id=`group`.id and `group`.status=1 and `group`.dispatch_order_status=1 and card.status=1 and card.card_status=1
+    	and card.web_login_status=1 and card.app_place_order_flag=1 and card.proxy_fail_times&lt;4 and (card.en_channel_str is null or card.en_channel_str='')
+    </select>
+    
+    <select id="queryList" resultType="CardBean" parameterType="CardBean">
+    	select card.*,`group`.name as group_name from card,`group` where card.group_id=`group`.id and `group`.status=1 
+		<include refid="find" />
+		order by card.id desc
+    </select>
+    
+    <select id="queryCanLoginList" resultType="CardBean" parameterType="CardBean">
+    	select card.* from card,`group` where card.group_id=`group`.id and `group`.status=1 and card.proxy_ip is not null
+		<include refid="find" />
+		order by card.id
+    </select>
+    
+    <select id="getNeedCheckOrderList" resultType="CardBean">
+    	select distinct card.id,card.card_no,card._uop_id_cookie,card.proxy_ip,card.proxy_port from `order`,card where `order`.card_id=card.id and `order`.`status`=0 and `order`.create_time&gt;unix_timestamp(now())-600
+    </select>
+    
+    <select id="getCanDispatchOrderList" resultType="CardBean">
+    	select card.* from card,`group` where card.group_id=`group`.id and `group`.status=1 and `group`.dispatch_order_status=1 and card.status=1 and card.card_status=1 and card.web_login_status=1 and
+    	<!-- buy_card_count&lt;16 and --> (card.app_place_order_flag=1 or card.web_place_order_flag=1) and 
+    	<!--  card.buy_card_last_time&lt;unix_timestamp(now())-30 and --> 
+    	card.proxy_fail_times&lt;4 order by buy_card_last_time
+    </select>
+    
+    <select id="adminQueryList" resultType="CardBean" parameterType="CardBean">
+    	select card.*,
+    	ifnull((select sum(amount) from `order` where `order`.card_id=card.id and `order`.status=1),0) as all_income,
+    	ifnull((select sum(amount) from `order` where `order`.card_id=card.id and `order`.status=1 and `order`.create_time&gt;=UNIX_TIMESTAMP(CAST(SYSDATE() AS DATE))),0) as today_income,
+    	`group`.name as group_name from card,`group` where card.group_id=`group`.id
+		<include refid="find" />
+		order by card.id desc
+    </select>
+    
+    <select id="queryCdkList" resultType="CardBean" parameterType="CardBean">
+    	 select id,(select count(1) from cdkey where card_id=card.id) as all_cdk_count,(select count(1) from cdkey where card_id=card.id and cdkey.`status`=1) as success_cdk_count
+		,(select count(1) from cdkey where card_id=card.id and cdkey.`status`=-1) as wait_cdk_count
+		 from card
+    </select>
+   
+    <select id="count" resultType="long"  parameterType="CardBean">
+        select count(1) from card
+        <where>
+        <include refid="find" />
+        </where> 
+    </select>
+   
+    <insert id="insert" parameterType="CardBean">
+        <selectKey resultType="java.lang.Long" order="AFTER" keyProperty="id">
+          SELECT LAST_INSERT_ID()
+      	</selectKey>
+        insert into card(card_no,com,create_time,group_id,remarks)
+         values(#{card_no},#{com},#{create_time},#{group_id},#{remarks})
+    </insert>
+    <update id="appAllReLogin" parameterType="java.lang.Long">
+        update card set card_status=0 where group_id = #{groupId} and `status`=1 and card_status!=1
+    </update>
+    <update id="webAllReLogin" parameterType="java.lang.Long">
+        update card set web_login_status=0 where group_id = #{groupId} and `status`=1 and web_login_status!=1
+    </update>
+    <update id="updateVerCodeByPhone">
+        update card set ver_code=#{verCode} where card_no = #{phone}
+    </update>
+    <update id="updateWebVerCodeByPhone">
+        update card set web_ver_code=#{verCode} where card_no = #{phone}
+    </update>
+    <update id="addProxyFailTimes" parameterType="Long">
+        update card set proxy_fail_times=proxy_fail_times+1 where id = #{id}
+    </update>
+    <update id="addBuyCardCount" parameterType="Long">
+        update card set buy_card_count=buy_card_count+1 where id = #{id}
+    </update>
+    <update id="updatePlaceOrderFlag" parameterType="CardBean">
+        update card 
+        <set>
+         	<if test="app_place_order_flag!=null">app_place_order_flag=#{app_place_order_flag},</if>
+            <if test="web_place_order_flag!=null">web_place_order_flag=#{web_place_order_flag},</if>
+        </set>
+         where id = #{id}
+         <if test="app_place_order_flag!=null">and app_place_order_flag!=2</if>
+         <if test="web_place_order_flag!=null">and web_place_order_flag!=2</if>
+    </update>
+    <update id="update" parameterType="CardBean" >
+        update card
+        <set>
+            <if test="card_no!=null">card_no=#{card_no},</if>
+            <if test="remarks!=null">remarks=#{remarks},</if>
+            <if test="com!=null">com=#{com},</if>
+            <if test="status!=null">status=#{status},</if>
+            <if test="card_status!=null">card_status=#{card_status},</if>
+            <if test="group_id!=null">group_id=#{group_id},</if>
+            <if test="update_time!=null">update_time=#{update_time},</if>
+            <if test="_login_token!=null">_login_token=#{_login_token},</if>
+            <if test="_login_cookie!=null">_login_cookie=#{_login_cookie},</if>
+            <if test="pro_name!=null">pro_name=#{pro_name},</if>
+            <if test="city_name!=null">city_name=#{city_name},</if>
+            <if test="ver_code!=null">ver_code=#{ver_code},</if>
+            <if test="_uop_id_cookie!=null">_uop_id_cookie=#{_uop_id_cookie},</if>
+            <if test="proxy_ip!=null">proxy_ip=#{proxy_ip},</if>
+            <if test="proxy_port!=null">proxy_port=#{proxy_port},</if>
+            <if test="proxy_expire_time!=null">proxy_expire_time=#{proxy_expire_time},</if>
+            <if test="proxy_fail_times!=null">proxy_fail_times=#{proxy_fail_times},</if>
+            <if test="web_ver_code!=null">web_ver_code=#{web_ver_code},</if>
+            <if test="web_login_status!=null">web_login_status=#{web_login_status},</if>
+            <if test="_web_login_cookie!=null">_web_login_cookie=#{_web_login_cookie},</if>
+            <if test="web_update_time!=null">web_update_time=#{web_update_time},</if>
+            <if test="app_place_order_flag!=null">app_place_order_flag=#{app_place_order_flag},</if>
+            <if test="web_place_order_flag!=null">web_place_order_flag=#{web_place_order_flag},</if>
+            <if test="en_channel_str!=null">en_channel_str=#{en_channel_str},</if>
+            <if test="en_channel_str_update_time!=null">en_channel_str_update_time=#{en_channel_str_update_time},</if>
+            <if test="buy_card_last_time!=null">buy_card_last_time=#{buy_card_last_time},</if>
+            <if test="buy_card_count!=null">buy_card_count=#{buy_card_count},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>
